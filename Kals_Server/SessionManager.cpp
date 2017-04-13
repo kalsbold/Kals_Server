@@ -3,7 +3,7 @@
 #include "SessionManager.h"
 
 
-SessionManager* GSessionManager = nullptr;
+SessionManager* G_SessionManager = nullptr;
 
 SessionManager::~SessionManager()
 {
@@ -19,8 +19,13 @@ ClientSession * SessionManager::CreateClient(SOCKET sock)
 {
 	ClientSession* client = new ClientSession(sock);
 
-	cout << "create ClientSession.." << endl;
-	clientlist.insert(ClientList::value_type(sock,client));
+	
+	{
+		FastSpinLockGuard lock(m_Lock);
+		cout << "create ClientSession.." << endl;
+		m_clientlist.insert(ClientList::value_type(sock, client));
+	}
+	
 	return client;
 
 }
@@ -32,11 +37,16 @@ ClientSession * SessionManager::CreateClient(SOCKET sock)
 */
 void SessionManager::DeleteClient(ClientSession * client)
 {
-	clientlist.erase(client->mSocket);
 
+	
+	{
+		FastSpinLockGuard lock(m_Lock);
+		cout << "client delete" << endl;
+		m_clientlist.erase(client->m_Socket);
+	}
 	delete client;
 
-	cout << "client delete" << endl;
+	
 }
 
 /*
@@ -47,12 +57,7 @@ void SessionManager::DeleteClient(ClientSession * client)
 */
 int SessionManager::IncreaseClientCount()
 {
-	EnterCriticalSection(&CS);
-	mClientCount++;
-	cout << "client count increase.." << endl;
-	LeaveCriticalSection(&CS);
-
-	return mClientCount;
+	return InterlockedIncrement(&m_ClientCount);
 }
 
 /*
@@ -63,10 +68,5 @@ int SessionManager::IncreaseClientCount()
 */
 int SessionManager::DecreaseClientCount()
 {
-	EnterCriticalSection(&CS);
-	mClientCount--;
-	cout << "client count decrease.." << endl;
-	LeaveCriticalSection(&CS);
-
-	return mClientCount;
+	return InterlockedDecrement(&m_ClientCount);
 }

@@ -23,17 +23,16 @@
 #include <cstdint>
 
 
-//DB용 헤더
-#include <my_global.h>
-#include <mysql.h>
+////DB용 헤더
+//#include <my_global.h>
+//#include <mysql.h>
 
 using namespace std;
 
 
-#pragma comment(lib,"ws2_32")
+//#pragma comment(lib,"ws2_32")
 //DB용 라이브러리
-#pragma comment(lib, "libmySQL")
+//#pragma comment(lib, "libmySQL")
 
-#define SERVERPORT 9000
 #define BUFSIZE 4096
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.

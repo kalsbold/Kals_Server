@@ -1,7 +1,7 @@
 #pragma once
 
 class ClientSession;
-struct OverlappedSock;
+struct OverlappedIOSock;
 
 class IOCPManager
 {
@@ -29,8 +29,8 @@ private:
 	static unsigned int WINAPI WorkerThread(LPVOID lpParam);
 	
 	//송수신 용 함수.
-	static bool ReceiveCompletion(ClientSession* client, OverlappedSock* ovsock, DWORD dwTransferred);
-	static bool SendCompletion(ClientSession* client, OverlappedSock* ovsock, DWORD dwTransferred);
+	static bool ReceiveCompletion(ClientSession* client, OverlappedIOSock* ovsock, DWORD dwTransferred);
+	static bool SendCompletion(ClientSession* client, OverlappedIOSock* ovsock, DWORD dwTransferred);
 
 	//Completion Port 용 함수.
 	HANDLE mCP;
@@ -41,4 +41,5 @@ private:
 
 };
 
-extern IOCPManager * GIocpManager;
+extern __declspec(thread) int l_IoThreadId;
+extern IOCPManager * G_IocpManager;

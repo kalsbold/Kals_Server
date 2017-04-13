@@ -7,110 +7,78 @@
 송신, 수신함수.
 */
 #pragma once
+#include "FastSpinLock.h"
 
 class ClientSession;
 class SessionManager;
 
-typedef enum PTYPE
-{
-	CHAT_NONE = -1,
-	CHAT_REGISTER,  //회원가입.
-	CHAT_SECEDE,	//탈퇴.
-	CHAT_LOGIN,		//로그인 시도.
-	CHAT_LOGOUT,	//로그아웃 시도.
-	CHAT_DATA		//데이터 전송.
-}Ptype;
-
 //입출력 타입.
 enum IOType
 {
-	IO_NONE,
-	IO_SEND,
-	IO_RECV,
-	IO_RECV_ZERO,
-	IO_ACCEPT
+	IO_NONE, //초기값
+	IO_SEND, //전송
+	IO_RECV,	//수신
+	IO_RECV_ZERO, //수신량 없음.
+	IO_ACCEPT	//접속.
 };
 
-
-#pragma pack(push,1)
-typedef struct PACKET
+//연결 종료 이유
+enum DisconnectReason
 {
-	DWORD Length;			//길이
-	Ptype Type;				//타입
-	char ID[64];			//ID
-	char PW[64];			//PW
-	char Data[BUFSIZE];		//데이터
-	PACKET() {	//패킷 초기화
-		Type = CHAT_NONE;
-		Length = sizeof(*this);
-		memset(ID, 0, sizeof(ID));
-		memset(PW, 0, sizeof(PW));
-		memset(Data, 0, sizeof(BUFSIZE));
-	}
-
-}Packet;
-#pragma pack(pop)
+	DR_NONE,	//초기값
+	DR_RECV_ZERO, // 수신량 없음
+	DR_ACTIVE, //실행
+	DR_ONCONNECT_ERROR, //연결 오류
+	DR_COMPLETION_ERROR, //컴플리션 오류
+};
 
 //overlapped 용 구조체.
-struct OverlappedSock
+struct OverlappedIOSock
 {
-	OverlappedSock(const ClientSession* owner, IOType ioType) : mSessionObject(owner), mIoType(ioType)
+	OverlappedIOSock(const ClientSession* owner, IOType ioType) : m_SessionObject(owner), m_IoType(ioType)
 	{
-		memset(&mOverlapped, 0, sizeof(OVERLAPPED));
-		memset(&mWsaBuf, 0, sizeof(WSABUF));
-		memset(mBuffer, 0, BUFSIZE*4);
+		memset(&m_Overlapped, 0, sizeof(OVERLAPPED));
+		memset(&m_WsaBuf, 0, sizeof(WSABUF));
+		memset(m_Buffer, 0, BUFSIZE);
 	}
 
-	OVERLAPPED				mOverlapped;
-	const ClientSession*	mSessionObject;
-	IOType			mIoType;
-	WSABUF			mWsaBuf;
-	char			mBuffer[BUFSIZE*4];
+	OVERLAPPED				m_Overlapped;
+	const ClientSession*	m_SessionObject;
+	IOType			m_IoType;
+	WSABUF			m_WsaBuf;
+	char			m_Buffer[BUFSIZE];
 };
 
 class ClientSession
 {
 public:
-	ClientSession(SOCKET sock) : mSocket(sock), mConnected(false)
+	ClientSession(SOCKET sock) : m_Socket(sock), m_Connected(false)
 	{
-		memset(&mClientAddr, 0, sizeof(SOCKADDR_IN));
+		memset(&m_ClientAddr, 0, sizeof(SOCKADDR_IN));
 	}
 	~ClientSession() {}
 
 	//연결용 함수.
 	bool	OnConnect(SOCKADDR_IN* addr);
 	//연결 확인 함수.
-	bool	IsConnected() const { return mConnected; }
+	bool	IsConnected() const { return m_Connected; }
 
 	//수신함수.
-	bool Recv();
+	bool PostRecv() const;
 	//송신함수.
-	bool Send(Packet* pack);
+	bool PostSend(const char* buf, int len) const;
 
-	void Disconnect();
+	void Disconnect(DisconnectReason dr);
 
-	//패킷을 분석하는 함수.
-	bool PacketParsing(Packet * pack);
-	//회원가입 패킷 구동함수
-	void OnCHAT_REGISTER(Packet * pack);
-	//탈퇴 패킷 구동함수.
-	void OnCHAT_SECEDE(Packet * pack);
-	//로그인패킷 구동함수.
-	void OnCHAT_LOGIN(Packet * pack);
-	//로그아웃패킷 구동함수.
-	void OnCHAT_LOGOUT(Packet * pack);
-	//데이터패킷 구동함수
-	bool OnCHAT_DATA(Packet * pack);
 
 
 private:
-	bool			mConnected;
-	SOCKET			mSocket;
+	bool			m_Connected;
+	SOCKET			m_Socket;
 
-	SOCKADDR_IN		mClientAddr;
+	SOCKADDR_IN		m_ClientAddr;
 
-	char mBuf[BUFSIZE*4];
-
-
+	FastSpinLock m_Lock;
+	
 	friend class SessionManager;
 };

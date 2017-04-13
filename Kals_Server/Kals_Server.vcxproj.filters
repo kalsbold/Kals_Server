@@ -1,17 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="소스 파일">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="리소스 파일">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{52ad43c0-6808-4721-9e79-a2017d45d1d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{a59413ee-0d5d-45b4-b2ab-a0fe681617d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main\헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Main\소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Utils\헤더 파일">
+      <UniqueIdentifier>{800a87ec-25f1-4a5a-b7c2-4978fbbb894f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils\소스 파일">
+      <UniqueIdentifier>{c18fdbf6-c95c-41d7-9880-9d8b5301b5ff}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,18 +31,54 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Main\헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Main\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SessionManager.h">
+      <Filter>Main\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="IOCPManager.h">
+      <Filter>Main\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientSession.h">
+      <Filter>Main\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="FastSpinLock.h">
+      <Filter>Utils\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Exception.h">
+      <Filter>Utils\헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Kals_Server.h">
+      <Filter>Main\헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Main\소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Kals_Server.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Main\소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="ClientSession.cpp">
+      <Filter>Main\소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="IOCPManager.cpp">
+      <Filter>Main\소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionManager.cpp">
+      <Filter>Main\소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="FastSpinLock.cpp">
+      <Filter>Utils\소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Exception.cpp">
+      <Filter>Utils\소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

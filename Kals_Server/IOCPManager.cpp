@@ -1,11 +1,14 @@
 #include "stdafx.h"
 #include "IOCPManager.h"
+#include "Kals_Server.h"
 #include "ClientSession.h"
 #include "SessionManager.h"
+#include "Exception.h"
 
-#define GQCS_TIMEOUT	200
+#define GQCS_TIMEOUT	20
 
-IOCPManager* GIocpManager = nullptr;
+__declspec(thread) int l_IoThreadId = 0;
+IOCPManager* G_IocpManager = nullptr;
 
 IOCPManager::IOCPManager() : mCP(NULL), mThreadCount(2), mListenSocket(NULL)
 {
@@ -35,7 +38,7 @@ bool IOCPManager::InitIOCPServer()
 
 	if (mCP == NULL)
 	{
-		cout << "Completion Port Create Fail..." << endl;
+		cout << "Completion Port Create Fail...Error Code : "<< GetLastError() << endl;
 		return false;
 	}
 
@@ -44,7 +47,7 @@ bool IOCPManager::InitIOCPServer()
 
 	if (mListenSocket == NULL)
 	{
-		cout << "Socket Create Fail..." << endl;
+		cout << "Socket Create Fail...Error Code : "<<WSAGetLastError() << endl;
 		return false;
 	}
 
@@ -53,7 +56,7 @@ bool IOCPManager::InitIOCPServer()
 
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serveraddr.sin_port = htons(SERVERPORT);
+	serveraddr.sin_port = htons(LISTEN_PORT);
 
 
 	int opt = 1;
@@ -62,11 +65,10 @@ bool IOCPManager::InitIOCPServer()
 
 	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
 	{
-		cout << "bind() Fail..." << endl;
+		cout << "bind() Fail...Error Code : " << WSAGetLastError() << endl;
 		return false;
 	}
 		
-
 	cout << "IOCP Server Init Succese..." << endl;
 
 	return true;
@@ -89,7 +91,7 @@ bool IOCPManager::StartIOThread()
 
 		if (threadHandle == INVALID_HANDLE_VALUE)
 		{
-			cout << "Create Thread Fail... " << endl;
+			cout << "Create Thread Fail... Error Code : " << GetLastError() << endl;
 			return false;
 		}
 		CloseHandle(threadHandle);
@@ -104,12 +106,13 @@ bool IOCPManager::AcceptLoop()
 		cout << "listen() Fail..." << endl;
 		return false;
 	}
+	cout << "listen success..." << endl;
 	while(true)
 	{
 		SOCKET acceptedSock = accept(mListenSocket, NULL, NULL);
 		if (acceptedSock == INVALID_SOCKET)
 		{
-			printf_s("accept: invalid socket\n");
+			cout <<"accept: invalid socket" << endl;
 			continue;
 		}
 
@@ -118,13 +121,13 @@ bool IOCPManager::AcceptLoop()
 		getpeername(acceptedSock, (SOCKADDR*)&clientaddr, &addrlen);
 
 		/// 소켓 정보 구조체 할당과 초기화
-		ClientSession* client = GSessionManager->CreateClient(acceptedSock);
+		ClientSession* client = G_SessionManager->CreateClient(acceptedSock);
 
 		/// 클라이언트 접속 처리
 		if (false == client->OnConnect(&clientaddr))
 		{
-			client->Disconnect();
-			GSessionManager->DeleteClient(client);
+			client->Disconnect(DR_ONCONNECT_ERROR);
+			G_SessionManager->DeleteClient(client);
 		}
 	}
 
@@ -145,16 +148,22 @@ int IOCPManager::GetThreadCount()
 
 unsigned int WINAPI IOCPManager::WorkerThread(LPVOID lpParam)
 {
-	HANDLE hCompletionPort = GIocpManager->GetCPHandle();
+	l_ThreadType = THREAD_IO_WORKER;
+	l_IoThreadId = reinterpret_cast<int>(lpParam);
+
+	HANDLE hCompletionPort = G_IocpManager->GetCPHandle();
 
 	while (true)
 	{
-		DWORD dwTransferred;
-		OverlappedSock* OvSock = nullptr;
+		DWORD dwTransferred = 0;
+		OverlappedIOSock* OvSock = nullptr;
 		ClientSession* CpClient = nullptr;
+
 		//Completion Port의 입출력 완료상태를 확인.
 		int ret = GetQueuedCompletionStatus(hCompletionPort, &dwTransferred, (PULONG_PTR)&CpClient, 
-			(LPOVERLAPPED*)&OvSock, -1);
+			(LPOVERLAPPED*)&OvSock, GQCS_TIMEOUT);
+
+		cout << "ret : " << ret << endl;
 
 		if (ret == 0 && GetLastError() == WAIT_TIMEOUT)
 		{
@@ -165,21 +174,20 @@ unsigned int WINAPI IOCPManager::WorkerThread(LPVOID lpParam)
 		if (ret == 0 || dwTransferred == 0)
 		{
 			cout << "Recive Data is zero..." << endl;
-			CpClient->Disconnect();
-			GSessionManager->DeleteClient(CpClient);
+			CpClient->Disconnect(DR_RECV_ZERO);
+			G_SessionManager->DeleteClient(CpClient);
 			continue;
 		}
 
 		if (OvSock == nullptr)
 		{
-			cout << "Recive Data is zero...Overlapped error" << endl;
-			CpClient->Disconnect();
-			GSessionManager->DeleteClient(CpClient);
+			CpClient->Disconnect(DR_RECV_ZERO);
+			G_SessionManager->DeleteClient(CpClient);
 		}
 
 		//입출력 타입에 따라 
 		bool completOK = true;
-		switch (OvSock->mIoType)
+		switch (OvSock->m_IoType)
 		{
 		case IO_SEND:
 			completOK = SendCompletion(CpClient, OvSock, dwTransferred);
@@ -189,55 +197,46 @@ unsigned int WINAPI IOCPManager::WorkerThread(LPVOID lpParam)
 			completOK = ReceiveCompletion(CpClient, OvSock, dwTransferred);
 			break;
 		default:
-			cout << "IO type Fail : " << OvSock->mIoType << endl;
+			cout << "IO type Fail : " << OvSock->m_IoType << endl;
 			break;
 		}
 
 		if (!completOK)
 		{
 			cout << "Completion Error..." << endl;
-			CpClient->Disconnect();
-			GSessionManager->DeleteClient(CpClient);
+			CpClient->Disconnect(DR_COMPLETION_ERROR);
+			G_SessionManager->DeleteClient(CpClient);
 		}
 	}
 	return 0;
 }
 
 //Completion Port에서 얻은 결과에 따라 송신후 수신하는 함수.
-bool IOCPManager::ReceiveCompletion(ClientSession* client, OverlappedSock* ovsock, DWORD dwTransferred)
+bool IOCPManager::ReceiveCompletion(ClientSession* client, OverlappedIOSock* ovsock, DWORD dwTransferred)
 {
 	if (client == nullptr)
 	{
 		cout << "Recive Client is nullptr" << endl;
+		delete ovsock;
 		return false;
 	}
-	//수신된 버퍼를 패킷구조체로 형변환한다.
-	Packet * pack = (Packet*)ovsock->mBuffer;
-	//변환된 패킷을 분석해서 맞는 동작을 한다.
-	client->PacketParsing(pack);
 
-	bool sendRe = client->Send(pack);
-
-	delete ovsock;
-
-	if (!sendRe)
+	if (!client->PostSend(ovsock->m_Buffer, dwTransferred))
 	{
 		cout << "send fail..." <<endl;
-	}
-
-	return client->Recv();
-}
-//Completion Port에서 얻은 결과에 따라 송신여부 확인 함수.
-bool IOCPManager::SendCompletion(ClientSession* client, OverlappedSock* ovsock, DWORD dwTransferred)
-{
-	if (client == nullptr)
-	{
-		printf_s("SendCompletion client returned nullptr! \n");
+		delete ovsock;
 		return false;
 	}
 
+	delete ovsock;
+	return client->PostRecv();
+}
+//Completion Port에서 얻은 결과에 따라 송신여부 확인 함수.
+bool IOCPManager::SendCompletion(ClientSession* client, OverlappedIOSock* ovsock, DWORD dwTransferred)
+{
+
 	/// 전송 다 되었는지 확인하는 것 처리..
-	if (ovsock->mWsaBuf.len != dwTransferred)
+	if (ovsock->m_WsaBuf.len != dwTransferred)
 	{
 		delete ovsock;
 		return false;

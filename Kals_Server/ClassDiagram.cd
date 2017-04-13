@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ClientSession">
+    <Position X="6.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAQAAAEAAAAAAABAAAAAAQAAAAAEAAAAMAAAJAAAABA=</HashCode>
+      <FileName>ClientSession.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SessionManager">
+    <Position X="4.25" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="SessionManager::ClientList" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>SessionManager.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAIAAIAAAAAAAAIAAAABAAAAAEAgBAAgAAAA=</HashCode>
+      <FileName>SessionManager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOCPManager">
+    <Position X="4.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAADCAAAAAAAAKBAAEABAAAAAgEACAAAAAAAAAACQA=</HashCode>
+      <FileName>IOCPManager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FastSpinLock">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAgAABAQAAAAAAAAAAAAAAAkAAAAAAA=</HashCode>
+      <FileName>FastSpinLock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FastSpinLockGuard">
+    <Position X="0.5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAEEAAAAAAAAA=</HashCode>
+      <FileName>FastSpinLock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClassTypeLock&lt;TargetClass&gt;">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="ClassTypeLock&lt;TargetClass&gt;::LockGuard" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>FastSpinLock.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>FastSpinLock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="OverlappedIOSock">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAQAAgAAAAAAAAAEAAAAAIAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>ClientSession.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="IOType">
+    <Position X="2.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAACAAAAAAAAAAAAAAAAAgAAAAAAAAAAAABAAAgAA=</HashCode>
+      <FileName>ClientSession.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DisconnectReason">
+    <Position X="0.5" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAABAAAgAAAAAAAAAAAAAAACAAgAAA=</HashCode>
+      <FileName>ClientSession.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="THREAD_TYPE">
+    <Position X="0.5" Y="4.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Kals_Server.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>
